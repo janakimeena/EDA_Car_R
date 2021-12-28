@@ -1,0 +1,128 @@
+# Importing library
+library(dplyr)
+library(ggplot2)
+# install.packages("corrplot")
+library(corrplot)
+# Load data
+cars_multi <- read.csv("Cars_Multi.csv")
+cars_price <- read.csv("Cars_Price.csv")
+str(cars_price)
+# Head of the dataset
+head(cars_multi)
+head(cars_price)
+
+# Dimensions of the dataset
+dim(cars_multi)
+
+dim(cars_price)
+
+# Join two dataset
+cars <- left_join(cars_multi, cars_price, by = "ID")
+colnames(cars)
+
+# Complet cases
+sum(!complete.cases(cars))
+
+summary(cars)
+
+# Structure of the dataset
+str(cars)
+
+#Mpg means Miles per gallon and we want to know the most common value
+ggplot(cars, aes(mpg)) + 
+  geom_histogram(binwidth = 5) +
+  labs(title = "Histogram of MPG", y = "Count") +
+  theme_classic()
+#We can see that the most common mpg is something between 15 and 20 mpg
+
+ggplot(cars, aes(cylinders)) + 
+  geom_bar() +
+  labs(title = "Cylinders", y = "Count") +
+  theme_classic()
+
+# For cylinders we can see that 4 cylinders is 2 times more often than 8 cylinders
+# Displacement
+
+# Using box plot we can see:
+boxplot(cars$displacement, data=cars$displacement, main="Box Plot Displacement", 
+        xlab="", ylab="Displacement")
+
+count(cars[as.character(cars$horsepower) == "?",])
+
+ggplot(cars, aes(weight)) + 
+  geom_histogram(binwidth = 5) +
+  labs(title = "Histogram of Weight", y = "Count") +
+  theme_classic()
+
+#For Weight we see that the most common weight is something between 
+#2000 and 3000. But most important we saw that we have the only one unique weight for the majority of the cars
+ggplot(cars, aes(acceleration)) + 
+  geom_density() +
+  labs(title = "Density of Weight") +
+  theme_classic()
+
+
+to_Plot <- as.data.frame(table(cars$model))
+colnames(to_Plot) <- c("Model", "Frequency")
+
+ggplot(to_Plot, aes(x = Model, y = Frequency)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Model") +
+  theme_classic()
+
+ggplot(cars, aes(origin)) + 
+  geom_bar() +
+  labs(title = "Origin", y = "Count") +
+  theme_classic()
+
+# We have the majority of the cars from origin 1
+
+# Price
+
+# For price we decide to do some pre processing to make more simpler. 
+# We are going to keep only the value before the point. 
+# For example: If we have 1598.07337 we are going to keep only 1598.
+
+cars$price <- as.integer(cars$price)
+
+boxplot(cars$price, data=cars$price, main="Price BoxPLot", 
+        xlab="", ylab="Price")
+
+# Looking at the box plot of price we can see that we have only one outlier
+
+to_Plot <- as.data.frame(table(cars$price))
+colnames(to_Plot) <- c("Price", "Frequency")
+
+ggplot(head(to_Plot[ order(-to_Plot[,2]), ]), aes(x = reorder(Price, Frequency), y = Frequency)) + 
+  geom_bar(stat = "identity") +
+  labs(title = "Common Price", x = "Price") +
+  theme_classic() + 
+  coord_flip()
+
+# With this visualization we can see that we have 3 price that repeat more than 40 times. 
+# We have 219 unique prices. 
+# This could be a problem if we have to predict the price of the cars because we have unbalanced data
+
+# Correlation
+
+# At this plot we can see the correlation between all features. 
+# Two features can have a positive correlation, a negative correlation 
+# and a neutral correlation When the dot is red that means that is a negative correlation. 
+# Which means when one value is getting high the other value is getting slow. The biggest is the dot more negative is the value When the dot is blue it is a positive correlation 
+
+# Transforming from factor to numeric
+cars$horsepower <- as.numeric(as.character(cars$horsepower))
+
+# Removing not complete row 
+cars <- cars[complete.cases(cars),]
+
+# Removing the ID
+cars <- cars[,-1]
+
+nums <- sapply(cars, is.numeric)
+correlations <- cor(cars[,nums])
+corrplot(correlations, order = "hclust")
+# Blank means that this two variables has no correlation
+
+
+
